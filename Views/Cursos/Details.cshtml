@@ -14,23 +14,19 @@
     </p>
 </div>
 
+<!-- Mensajes de éxito o error -->
 @if (TempData["Mensaje"] != null)
 {
     <div class="alert alert-success">@TempData["Mensaje"]</div>
 }
-
-@if (!ViewData.ModelState.IsValid)
+@if (TempData["Error"] != null)
 {
-    <div class="alert alert-danger">
-        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
-        {
-            <p>@error.ErrorMessage</p>
-        }
-    </div>
+    <div class="alert alert-danger">@TempData["Error"]</div>
 }
 
-<form asp-action="Inscribirse" method="post">
-    <input type="hidden" name="id" value="@Model.Id" />
+<!-- Botón de inscripción -->
+<form asp-controller="Matriculas" asp-action="Inscribirse" method="post">
+    <input type="hidden" name="cursoId" value="@Model.Id" />
     <button type="submit" class="btn btn-primary">Inscribirse</button>
 </form>
 
