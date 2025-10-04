@@ -25,7 +25,21 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 .AddEntityFrameworkStores<ApplicationDbContext>();
 
 
-builder.Services.AddDistributedMemoryCache();
+// --------------------- CACHE ---------------------
+// Usar Redis solo en producción
+if (builder.Environment.IsProduction())
+{
+    builder.Services.AddStackExchangeRedisCache(options =>
+    {
+        options.Configuration = builder.Configuration["Redis__ConnectionString"];
+    });
+}
+else
+{
+    // En desarrollo, usar cache en memoria
+    builder.Services.AddDistributedMemoryCache();
+}
+
 // Habilitar sesiones
 builder.Services.AddSession(options =>
 {
