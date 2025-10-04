@@ -1,76 +1,82 @@
 @model IEnumerable<Parciaaaal.Models.Curso>
-
-@{
-    ViewData["Title"] = "Catálogo de Cursos";
-}
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<IdentityUser> UserManager
 
 <h1 class="mb-4 text-primary">Catálogo de Cursos</h1>
 
-<form asp-action="Index" method="get" class="row g-3 mb-4">
+<form asp-action="Index" method="get" class="mb-3 row g-2">
     <div class="col-md-3">
-        <input type="text" name="buscar" class="form-control" placeholder="Buscar por código o nombre..."
-               value="@Context.Request.Query["buscar"]" />
+        <input type="text" name="buscar" class="form-control" placeholder="Buscar por código o nombre"
+               value="@ViewData["Buscar"]" />
     </div>
-
     <div class="col-md-2">
-        <input type="number" name="minCreditos" class="form-control" placeholder="Mín Créditos"
-               value="@Context.Request.Query["minCreditos"]" />
+        <input type="number" name="minCreditos" class="form-control" placeholder="Mín. Créditos"
+               value="@ViewData["MinCreditos"]" min="0" />
     </div>
-
     <div class="col-md-2">
-        <input type="number" name="maxCreditos" class="form-control" placeholder="Máx Créditos"
-               value="@Context.Request.Query["maxCreditos"]" />
+        <input type="number" name="maxCreditos" class="form-control" placeholder="Máx. Créditos"
+               value="@ViewData["MaxCreditos"]" min="0" />
     </div>
-
     <div class="col-md-2">
         <input type="time" name="horarioInicio" class="form-control"
-               value="@Context.Request.Query["horarioInicio"]" />
+               value="@ViewData["HorarioInicio"]" />
     </div>
-
     <div class="col-md-2">
         <input type="time" name="horarioFin" class="form-control"
-               value="@Context.Request.Query["horarioFin"]" />
+               value="@ViewData["HorarioFin"]" />
     </div>
-
     <div class="col-md-1">
         <button type="submit" class="btn btn-primary w-100">Filtrar</button>
     </div>
 </form>
 
-<table class="table table-striped table-hover align-middle">
+<table class="table table-striped">
     <thead class="table-primary">
         <tr>
-            <th>@Html.DisplayNameFor(model => model.Codigo)</th>
-            <th>@Html.DisplayNameFor(model => model.Nombre)</th>
-            <th>@Html.DisplayNameFor(model => model.Creditos)</th>
-            <th>@Html.DisplayNameFor(model => model.CupoMaximo)</th>
-            <th>@Html.DisplayNameFor(model => model.HorarioInicio)</th>
-            <th>@Html.DisplayNameFor(model => model.HorarioFin)</th>
-            <th>@Html.DisplayNameFor(model => model.Activo)</th>
+            <th>Código</th>
+            <th>Nombre</th>
+            <th>Créditos</th>
+            <th>Horario</th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var item in Model)
+        @foreach (var curso in Model)
         {
             <tr>
-                <td>@item.Codigo</td>
-                <td>@item.Nombre</td>
-                <td>@item.Creditos</td>
-                <td>@item.CupoMaximo</td>
-                <td>@item.HorarioInicio</td>
-                <td>@item.HorarioFin</td>
-                <td>@(item.Activo ? "Sí" : "No")</td>
+                <td>@curso.Codigo</td>
+                <td>@curso.Nombre</td>
+                <td>@curso.Creditos</td>
+                <td>@curso.HorarioInicio.ToString(@"hh\:mm") - @curso.HorarioFin.ToString(@"hh\:mm")</td>
                 <td>
-                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info text-white">Detalles</a>
-                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Editar</a>
-                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Eliminar</a>
+                    <a asp-action="Details" asp-route-id="@curso.Id" class="btn btn-sm btn-info">Detalles</a>
+
+                    @if (User.IsInRole("Coordinador"))
+                    {
+                        <a asp-action="Edit" asp-route-id="@curso.Id" class="btn btn-sm btn-warning">Editar</a>
+                    }
+
+                    @if (!User.IsInRole("Coordinador"))
+                    {
+                        <form asp-controller="Matriculas" asp-action="Create" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="cursoId" value="@curso.Id" />
+                            <button type="submit" class="btn btn-sm btn-success">Matricular</button>
+                        </form>
+                    }
                 </td>
             </tr>
         }
     </tbody>
 </table>
 
-<p>
-    <a asp-action="Create" class="btn btn-success">➕ Nuevo Curso</a>
-</p>
+@if (User.IsInRole("Coordinador"))
+{
+    <p>
+        <a asp-action="Create" class="btn btn-success">➕ Nuevo Curso</a>
+    </p>
+}
+
+
+
+

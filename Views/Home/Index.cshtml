@@ -1,8 +1,39 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Inicio";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container mt-5">
+    <div class="jumbotron text-center bg-light p-5 rounded shadow-sm">
+        <h1 class="display-4 text-primary">Bienvenido a la Plataforma de Cursos</h1>
+        <p class="lead mt-3">
+            Gestiona tus cursos y matrículas de manera sencilla y rápida.
+        </p>
+        <hr class="my-4">
+        <p>
+            Usa el menú superior para navegar entre <strong>Cursos</strong> y <strong>Matrículas</strong>.
+        </p>
+        <a class="btn btn-primary btn-lg mt-3" asp-controller="Cursos" asp-action="Index">Ver Catálogo de Cursos</a>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Cursos Disponibles</h5>
+                    <p class="card-text">Explora el catálogo de cursos y matricúlate en los que desees.</p>
+                    <a class="btn btn-outline-primary" asp-controller="Cursos" asp-action="Index">Ver Cursos</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Tus Matrículas</h5>
+                    <p class="card-text">Revisa tus matrículas actuales y gestiona su estado.</p>
+                    <a class="btn btn-outline-success" asp-controller="Matriculas" asp-action="Index">Ver Matrículas</a>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+

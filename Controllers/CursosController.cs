@@ -4,6 +4,7 @@ using Parciaaaal.Data;
 using Parciaaaal.Models;
 using Microsoft.Extensions.Caching.Distributed;
 using System.Text.Json;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Parciaaaal.Controllers
 {
@@ -41,15 +42,24 @@ namespace Parciaaaal.Controllers
                 await _cache.SetStringAsync("CursosActivos", JsonSerializer.Serialize(cursos), cacheOptions);
             }
 
-            // Aplicar filtros
+            // Aplicar filtros de búsqueda
             if (!string.IsNullOrEmpty(buscar))
                 cursos = cursos.Where(c => c.Nombre.Contains(buscar) || c.Codigo.Contains(buscar)).ToList();
             if (minCreditos.HasValue)
                 cursos = cursos.Where(c => c.Creditos >= minCreditos.Value).ToList();
             if (maxCreditos.HasValue)
                 cursos = cursos.Where(c => c.Creditos <= maxCreditos.Value).ToList();
-            if (horarioInicio.HasValue && horarioFin.HasValue)
-                cursos = cursos.Where(c => c.HorarioInicio >= horarioInicio.Value && c.HorarioFin <= horarioFin.Value).ToList();
+            if (horarioInicio.HasValue)
+                cursos = cursos.Where(c => c.HorarioInicio >= horarioInicio.Value).ToList();
+            if (horarioFin.HasValue)
+                cursos = cursos.Where(c => c.HorarioFin <= horarioFin.Value).ToList();
+
+            // Guardar filtros en ViewData para mantener valores en los inputs
+            ViewData["Buscar"] = buscar;
+            ViewData["MinCreditos"] = minCreditos;
+            ViewData["MaxCreditos"] = maxCreditos;
+            ViewData["HorarioInicio"] = horarioInicio?.ToString(@"hh\:mm");
+            ViewData["HorarioFin"] = horarioFin?.ToString(@"hh\:mm");
 
             return View(cursos);
         }
@@ -69,9 +79,16 @@ namespace Parciaaaal.Controllers
             return View(curso);
         }
 
+        // GET: Cursos/Create
+        [Authorize(Roles = "Coordinador")]
+        public IActionResult Create()
+        {
+            return View();
+        }
         // POST: Cursos/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Coordinador")]
         public async Task<IActionResult> Create(Curso curso)
         {
             if (ModelState.IsValid)
@@ -158,30 +175,15 @@ namespace Parciaaaal.Controllers
         // POST: Cursos/Inscribirse/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Inscribirse(int id)
+        [Authorize(Roles = "Estudiante")]
+        public IActionResult Inscribirse(int id)
         {
-            var curso = await _context.Cursos.FirstOrDefaultAsync(c => c.Id == id && c.Activo);
-            if (curso == null) return NotFound();
-
-            // Validaciones server-side (opcional)
-            if (curso.Creditos < 0)
-            {
-                ModelState.AddModelError("", "Los créditos no pueden ser negativos.");
-                return View("Details", curso);
-            }
-
-            if (curso.HorarioFin < curso.HorarioInicio)
-            {
-                ModelState.AddModelError("", "El horario de fin no puede ser anterior al horario de inicio.");
-                return View("Details", curso);
-            }
-
-            TempData["Mensaje"] = $"Te has inscrito al curso {curso.Nombre} correctamente.";
-
-            return RedirectToAction(nameof(Details), new { id = curso.Id });
+            // Redirigir al Create de MatriculasController
+            return RedirectToAction("Create", "Matriculas", new { cursoId = id });
         }
     }
 }
+
 
 
 

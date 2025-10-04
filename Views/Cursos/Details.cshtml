@@ -1,20 +1,17 @@
 @model Parciaaaal.Models.Curso
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<IdentityUser> UserManager
 
-@{
-    ViewData["Title"] = "Detalle del Curso";
-}
-
-<h1 class="mb-4 text-primary">@Model.Nombre</h1>
+<h2>@Model.Nombre</h2>
 
 <div class="mb-3">
-    <p><strong>Código:</strong> @Model.Codigo</p>
-    <p><strong>Créditos:</strong> @Model.Creditos</p>
-    <p><strong>Horario:</strong> 
-        @(Model.HorarioInicio.ToString(@"hh\:mm")) - @(Model.HorarioFin.ToString(@"hh\:mm"))
-    </p>
+    <strong>Código:</strong> @Model.Codigo <br />
+    <strong>Créditos:</strong> @Model.Creditos <br />
+    <strong>Horario:</strong> @Model.HorarioInicio.ToString(@"hh\:mm") - @Model.HorarioFin.ToString(@"hh\:mm") <br />
+    <strong>Estado:</strong> @(Model.Activo ? "Activo" : "Inactivo")
 </div>
 
-<!-- Mensajes de éxito o error -->
+@* Mostrar mensaje de TempData si existe *@
 @if (TempData["Mensaje"] != null)
 {
     <div class="alert alert-success">@TempData["Mensaje"]</div>
@@ -24,12 +21,22 @@
     <div class="alert alert-danger">@TempData["Error"]</div>
 }
 
-<!-- Botón de inscripción -->
-<form asp-controller="Matriculas" asp-action="Inscribirse" method="post">
-    <input type="hidden" name="cursoId" value="@Model.Id" />
-    <button type="submit" class="btn btn-primary">Inscribirse</button>
-</form>
+<div class="mb-3">
+    <a asp-action="Index" class="btn btn-secondary">Volver al Catálogo</a>
 
-<div class="mt-3">
-    <a asp-action="Index" class="btn btn-secondary">Volver al catálogo</a>
+    @* Botón Editar solo coordinador *@
+    @if (User.IsInRole("Coordinador"))
+    {
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Editar Curso</a>
+    }
+
+    @* Botón Matricular solo estudiante *@
+    @if (!User.IsInRole("Coordinador"))
+    {
+        <form asp-controller="Matriculas" asp-action="Create" method="post" class="d-inline">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="cursoId" value="@Model.Id" />
+            <button type="submit" class="btn btn-success">Matricular</button>
+        </form>
+    }
 </div>
