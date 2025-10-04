@@ -1,0 +1,39 @@
+@model Parciaaaal.Models.Curso
+
+@{
+    ViewData["Title"] = "Detalle del Curso";
+}
+
+<h1 class="mb-4 text-primary">@Model.Nombre</h1>
+
+<div class="mb-3">
+    <p><strong>Código:</strong> @Model.Codigo</p>
+    <p><strong>Créditos:</strong> @Model.Creditos</p>
+    <p><strong>Horario:</strong> 
+        @(Model.HorarioInicio.ToString(@"hh\:mm")) - @(Model.HorarioFin.ToString(@"hh\:mm"))
+    </p>
+</div>
+
+@if (TempData["Mensaje"] != null)
+{
+    <div class="alert alert-success">@TempData["Mensaje"]</div>
+}
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+        {
+            <p>@error.ErrorMessage</p>
+        }
+    </div>
+}
+
+<form asp-action="Inscribirse" method="post">
+    <input type="hidden" name="id" value="@Model.Id" />
+    <button type="submit" class="btn btn-primary">Inscribirse</button>
+</form>
+
+<div class="mt-3">
+    <a asp-action="Index" class="btn btn-secondary">Volver al catálogo</a>
+</div>
