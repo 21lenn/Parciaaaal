@@ -106,18 +106,28 @@ using (var scope = app.Services.CreateScope())
         await userManager.AddToRoleAsync(user, "Coordinador");
     }
 
-    //  Crear usuarios tipo estudiante 
+    // Crear rol Estudiante si no existe
+    if (!await roleManager.RoleExistsAsync("Estudiante"))
+    {
+        await roleManager.CreateAsync(new IdentityRole("Estudiante"));
+    }
+
+    // Crear usuarios tipo estudiante y asignar rol
     string[] estudiantesEmails = { "estudiante1@uni.edu", "estudiante2@uni.edu" };
 
     foreach (var estEmail in estudiantesEmails)
     {
         var estudiante = await userManager.FindByEmailAsync(estEmail);
         if (estudiante == null)
-        {
+            {
             estudiante = new IdentityUser { UserName = estEmail, Email = estEmail, EmailConfirmed = true };
             await userManager.CreateAsync(estudiante, "Password123!");
-            
-        }
+            }
+
+        if (!await userManager.IsInRoleAsync(estudiante, "Estudiante"))
+            {
+            await userManager.AddToRoleAsync(estudiante, "Estudiante");
+            }
     }
 }
 
