@@ -56,7 +56,6 @@ app.MapControllerRoute(
 
 app.MapRazorPages();
 
-
 // Inicializar datos
 using (var scope = app.Services.CreateScope())
 {
@@ -93,6 +92,20 @@ using (var scope = app.Services.CreateScope())
         user = new IdentityUser { UserName = email, Email = email, EmailConfirmed = true };
         await userManager.CreateAsync(user, "Admin123!");
         await userManager.AddToRoleAsync(user, "Coordinador");
+    }
+
+    //  Crear usuarios tipo estudiante 
+    string[] estudiantesEmails = { "estudiante1@uni.edu", "estudiante2@uni.edu" };
+
+    foreach (var estEmail in estudiantesEmails)
+    {
+        var estudiante = await userManager.FindByEmailAsync(estEmail);
+        if (estudiante == null)
+        {
+            estudiante = new IdentityUser { UserName = estEmail, Email = estEmail, EmailConfirmed = true };
+            await userManager.CreateAsync(estudiante, "Password123!");
+            
+        }
     }
 }
 
