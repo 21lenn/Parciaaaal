@@ -410,3 +410,6 @@ C:\quemen a la usmp\probandoparcialdnuevo\Parciaaaal\bin\Debug\net9.0\ru\Microso
 C:\quemen a la usmp\probandoparcialdnuevo\Parciaaaal\bin\Debug\net9.0\tr\Microsoft.CodeAnalysis.Scripting.resources.dll
 C:\quemen a la usmp\probandoparcialdnuevo\Parciaaaal\bin\Debug\net9.0\zh-Hans\Microsoft.CodeAnalysis.Scripting.resources.dll
 C:\quemen a la usmp\probandoparcialdnuevo\Parciaaaal\bin\Debug\net9.0\zh-Hant\Microsoft.CodeAnalysis.Scripting.resources.dll
+C:\quemen a la usmp\probandoparcialdnuevo\Parciaaaal\bin\Debug\net9.0\Microsoft.Extensions.Caching.StackExchangeRedis.dll
+C:\quemen a la usmp\probandoparcialdnuevo\Parciaaaal\bin\Debug\net9.0\Pipelines.Sockets.Unofficial.dll
+C:\quemen a la usmp\probandoparcialdnuevo\Parciaaaal\bin\Debug\net9.0\StackExchange.Redis.dll

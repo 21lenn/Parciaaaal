@@ -2,38 +2,56 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Parciaaaal.Data;
 using Parciaaaal.Models;
+using Microsoft.Extensions.Caching.Distributed;
+using System.Text.Json;
 
 namespace Parciaaaal.Controllers
 {
     public class CursosController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IDistributedCache _cache;
 
-        public CursosController(ApplicationDbContext context)
+        public CursosController(ApplicationDbContext context, IDistributedCache cache)
         {
             _context = context;
+            _cache = cache;
         }
 
         // GET: Cursos
         public async Task<IActionResult> Index(string? buscar, int? minCreditos, int? maxCreditos, TimeSpan? horarioInicio, TimeSpan? horarioFin)
         {
-            var cursos = from c in _context.Cursos
-                         where c.Activo
-                         select c;
+            List<Curso> cursos;
 
+            // Intentar obtener cursos desde cache
+            var cachedCursos = await _cache.GetStringAsync("CursosActivos");
+            if (cachedCursos != null)
+            {
+                cursos = JsonSerializer.Deserialize<List<Curso>>(cachedCursos)!;
+            }
+            else
+            {
+                cursos = await _context.Cursos.Where(c => c.Activo).ToListAsync();
+
+                // Guardar en cache
+                var cacheOptions = new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
+                };
+                await _cache.SetStringAsync("CursosActivos", JsonSerializer.Serialize(cursos), cacheOptions);
+            }
+
+            // Aplicar filtros
             if (!string.IsNullOrEmpty(buscar))
-                cursos = cursos.Where(c => c.Nombre.Contains(buscar) || c.Codigo.Contains(buscar));
-
+                cursos = cursos.Where(c => c.Nombre.Contains(buscar) || c.Codigo.Contains(buscar)).ToList();
             if (minCreditos.HasValue)
-                cursos = cursos.Where(c => c.Creditos >= minCreditos.Value);
-
+                cursos = cursos.Where(c => c.Creditos >= minCreditos.Value).ToList();
             if (maxCreditos.HasValue)
-                cursos = cursos.Where(c => c.Creditos <= maxCreditos.Value);
-
+                cursos = cursos.Where(c => c.Creditos <= maxCreditos.Value).ToList();
             if (horarioInicio.HasValue && horarioFin.HasValue)
-                cursos = cursos.Where(c => c.HorarioInicio >= horarioInicio.Value && c.HorarioFin <= horarioFin.Value);
+                cursos = cursos.Where(c => c.HorarioInicio >= horarioInicio.Value && c.HorarioFin <= horarioFin.Value).ToList();
 
-            return View(await cursos.ToListAsync());
+            return View(cursos);
         }
 
         // GET: Cursos/Details/5
@@ -44,38 +62,12 @@ namespace Parciaaaal.Controllers
             var curso = await _context.Cursos.FirstOrDefaultAsync(c => c.Id == id);
             if (curso == null) return NotFound();
 
+            // Guardar último curso visitado en sesión
+            HttpContext.Session.SetString("UltimoCursoId", curso.Id.ToString());
+            HttpContext.Session.SetString("UltimoCursoNombre", curso.Nombre);
+
             return View(curso);
         }
-
-        // POST: Cursos/Inscribirse/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Inscribirse(int id)
-        {
-            var curso = await _context.Cursos.FirstOrDefaultAsync(c => c.Id == id && c.Activo);
-            if (curso == null) return NotFound();
-
-            // Validaciones server-side
-            if (curso.Creditos < 0)
-            {
-                ModelState.AddModelError("", "Los créditos no pueden ser negativos.");
-                return View("Details", curso);
-            }
-
-            if (curso.HorarioFin < curso.HorarioInicio)
-            {
-                ModelState.AddModelError("", "El horario de fin no puede ser anterior al horario de inicio.");
-                return View("Details", curso);
-            }
-
-            // Simular inscripción
-            TempData["Mensaje"] = $"Te has inscrito al curso {curso.Nombre} correctamente.";
-
-            return RedirectToAction(nameof(Details), new { id = curso.Id });
-        }
-
-        // GET: Cursos/Create
-        public IActionResult Create() => View();
 
         // POST: Cursos/Create
         [HttpPost]
@@ -86,6 +78,10 @@ namespace Parciaaaal.Controllers
             {
                 _context.Add(curso);
                 await _context.SaveChangesAsync();
+
+                // INVALIDAR CACHE
+                await _cache.RemoveAsync("CursosActivos");
+
                 return RedirectToAction(nameof(Index));
             }
             return View(curso);
@@ -115,6 +111,9 @@ namespace Parciaaaal.Controllers
                 {
                     _context.Update(curso);
                     await _context.SaveChangesAsync();
+
+                    // INVALIDAR CACHE
+                    await _cache.RemoveAsync("CursosActivos");
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -149,10 +148,41 @@ namespace Parciaaaal.Controllers
             {
                 _context.Cursos.Remove(curso);
                 await _context.SaveChangesAsync();
+
+                // INVALIDAR CACHE
+                await _cache.RemoveAsync("CursosActivos");
             }
             return RedirectToAction(nameof(Index));
         }
+
+        // POST: Cursos/Inscribirse/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Inscribirse(int id)
+        {
+            var curso = await _context.Cursos.FirstOrDefaultAsync(c => c.Id == id && c.Activo);
+            if (curso == null) return NotFound();
+
+            // Validaciones server-side (opcional)
+            if (curso.Creditos < 0)
+            {
+                ModelState.AddModelError("", "Los créditos no pueden ser negativos.");
+                return View("Details", curso);
+            }
+
+            if (curso.HorarioFin < curso.HorarioInicio)
+            {
+                ModelState.AddModelError("", "El horario de fin no puede ser anterior al horario de inicio.");
+                return View("Details", curso);
+            }
+
+            TempData["Mensaje"] = $"Te has inscrito al curso {curso.Nombre} correctamente.";
+
+            return RedirectToAction(nameof(Details), new { id = curso.Id });
+        }
     }
 }
+
+
 
 
