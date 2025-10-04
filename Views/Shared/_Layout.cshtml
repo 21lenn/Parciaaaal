@@ -1,6 +1,7 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -62,6 +63,20 @@
     </header>
 
     <div class="container mt-4">
+        @* Mostrar enlace al último curso visitado *@
+        @{
+            var ultimoCursoId = Context.Session.GetString("UltimoCursoId");
+            var ultimoCursoNombre = Context.Session.GetString("UltimoCursoNombre");
+        }
+        @if (!string.IsNullOrEmpty(ultimoCursoId) && !string.IsNullOrEmpty(ultimoCursoNombre))
+        {
+            <div class="alert alert-info">
+                <a asp-controller="Cursos" asp-action="Details" asp-route-id="@ultimoCursoId">
+                    Volver al curso: @ultimoCursoNombre
+                </a>
+            </div>
+        }
+
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
@@ -78,4 +93,6 @@
     @RenderSection("Scripts", required: false)
 </body>
 </html>
+
+
 

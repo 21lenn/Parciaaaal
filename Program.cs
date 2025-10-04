@@ -24,6 +24,16 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 .AddRoles<IdentityRole>() // necesario para el rol Coordinador
 .AddEntityFrameworkStores<ApplicationDbContext>();
 
+
+builder.Services.AddDistributedMemoryCache();
+// Habilitar sesiones
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
 // Agregar controladores y vistas
 builder.Services.AddControllersWithViews();
 
@@ -48,6 +58,8 @@ app.UseRouting();
 // Autenticación y autorización
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseSession();
 
 // Rutas
 app.MapControllerRoute(
